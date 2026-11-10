@@ -1,0 +1,38 @@
+### Pruebas manuales (IntelliJ HTTP Client / VS Code REST Client)
+@base = http://localhost:8080
+
+### 1. Login GERENTE -> copiar "token"
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "gerente@petsalud.cl", "password": "Gerente#2025" }
+
+### 2. Login CLIENTE
+# @name loginCliente
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "cliente@petsalud.cl", "password": "Cliente#2025" }
+
+### 3. Sin token -> 401
+GET {{base}}/api/productos
+
+### 4. CLIENTE lista usuarios -> 403
+GET {{base}}/api/usuarios
+Authorization: Bearer {{loginCliente.response.body.token}}
+
+### 5. XSS en registro -> 400
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{ "email": "xss@petsalud.cl", "password": "Segura#2025", "nombre": "<script>alert(1)</script>" }
+
+### 6. SQL Injection en filtro -> 200 con []
+GET {{base}}/api/productos/categoria?categoria=%27%20OR%20%271%27%3D%271%27%20--
+Authorization: Bearer {{loginCliente.response.body.token}}
+
+### 7. Registro de cliente valido -> 201 (rol siempre CLIENTE)
+POST {{base}}/api/auth/registro
+Content-Type: application/json
+
+{ "email": "nuevo@petsalud.cl", "password": "Segura#2025", "nombre": "Nuevo", "rol": "GERENTE" }
